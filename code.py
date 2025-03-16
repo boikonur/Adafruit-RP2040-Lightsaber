@@ -23,7 +23,7 @@ external_power.value = True
 audio = audiobusio.I2SOut(board.I2S_BIT_CLOCK, board.I2S_WORD_SELECT, board.I2S_DATA)
 
 mixer = audiomixer.Mixer(
-    voice_count=2,
+    voice_count=4,  # 1 hum + 3 event voices!
     sample_rate=22050,
     channel_count=1,
     bits_per_sample=16,
@@ -41,7 +41,7 @@ num_pixels = 100
 blade = neopixel.NeoPixel(board.EXTERNAL_NEOPIXELS, num_pixels, auto_write=False)
 blade.brightness = 0.8
 
-# Blade color list for cycling
+# Blade color list
 blade_colors = [(0, 125, 255), (0, 255, 0), (255, 0, 0), (255, 255, 0)]  # Cyan, Green, Red, Yellow
 current_color_index = 0
 blade_color = blade_colors[current_color_index]
@@ -72,11 +72,9 @@ hum = audiocore.WaveFile(hum_wave)
 SWING_THRESHOLD = 15
 CLASH_THRESHOLD = 20
 
-DISABLE_CLASH = False  # Enable/disable clash events
+DISABLE_CLASH = False
 
 power_on = False
-fade_step = 0
-fade_active = False
 
 # Button press timing
 BUTTON_LONG_PRESS_DURATION = 0.5  # Seconds
@@ -127,28 +125,32 @@ def start_power_off():
     blade.fill((0, 0, 0))
     blade.show()
 
+# === NEW: Play on available voice (voices 1-3 for events) === #
+def play_event(sound_file):
+    for i in range(1, 4):  # Voices 1-3 for events
+        if not mixer.voice[i].playing:
+            wave_file = open(sound_file, "rb")
+            event = audiocore.WaveFile(wave_file)
+            mixer.voice[i].play(event, loop=False)
+            mixer.voice[i].level = 1.0
+            print(f"Playing {sound_file} on voice {i}")
+            return
+    # All voices busy
+    print("All event voices busy! Dropping sound.")
+
 def trigger_swing():
-    if not mixer.voice[1].playing and power_on:
+    if power_on:
         sound_file = random.choice(swing_sounds)
-        wave_file = open(sound_file, "rb")
-        swing = audiocore.WaveFile(wave_file)
-        mixer.voice[1].play(swing, loop=False)
-        mixer.voice[1].level = 1.0
-        print(f"Swing: {sound_file}")
+        play_event(sound_file)
 
 def trigger_clash():
-    if not mixer.voice[1].playing and power_on and not DISABLE_CLASH:
+    if power_on and not DISABLE_CLASH:
         sound_file = random.choice(clash_sounds)
-        wave_file = open(sound_file, "rb")
-        clash = audiocore.WaveFile(wave_file)
-        mixer.voice[1].play(clash, loop=False)
-        mixer.voice[1].level = 1.0
-        print(f"Clash: {sound_file}")
+        play_event(sound_file)
         # Flash white
         blade.fill((255, 255, 255))
         blade.show()
         time.sleep(0.3)
-        # Restore color
         blade.fill(blade_color)
         blade.show()
 
