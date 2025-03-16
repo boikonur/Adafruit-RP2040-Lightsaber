@@ -1,0 +1,6 @@
+.vscode
+dist/
+*.log
+.DS_Store
+.mpy-cross/
+.circuitpython/

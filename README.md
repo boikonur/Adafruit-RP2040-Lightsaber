@@ -1,4 +1,4 @@
-# 🌟 Adafruit-RP2040-Lightsaber aka  Pythosaber
+# 🌟 Adafruit-RP2040-Lightsaber Software
 **🐍Pythonsaber** is a lightweight, kid-friendly CircuitPython lightsaber project designed to be approachable for beginners, yet packed with techniques used by professional lightsaber ecosystems like ProffieOS!
 
 ---
@@ -23,13 +23,13 @@ While projects like **ProffieOS** offer extreme configurability and realism, the
 
 **🐍Pythonsaber**:
 
-|                    | **🐍Pythonsaber (CircuitPython)**              | **Proffieboard + ProffieOS**          |
+|                    | **🐍Pythonsaber (CircuitPython)**              | **Proffieboard + ProffieOS**     |
 |--------------------|--------------------------------------------|--------------------------------------|
 | Simplicity         | 🟢 Clean Python code, easy for beginners    | 🔴 Requires complex C++ knowledge|
 | Customization      | 🟢 Change sounds, behaviors directly in code| 🟢 Highly customizable, but complex   |
 | Stability          | 🟢 Simple & stable                          | 🟢 Stable, but config errors are common   |
 | Hardware Cost      | 🟢 Affordable (RP2040 + NeoPixels)          | 🔴 Bit more pricey Proffieboard hardware |
-| Advanced Features  | 🔴 Basic lightsaber logic                        | 🟢 SmoothSwing, blade styles, etc.    |
+| Advanced Features  | 🔴 Basic lightsaber logic                   | 🟢 SmoothSwing, blade styles, etc.    |
 
 ---
 

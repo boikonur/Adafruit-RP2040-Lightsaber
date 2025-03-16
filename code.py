@@ -12,6 +12,8 @@ import math
 import random
 import os
 
+MAX_VOLUME = 0.1  # Global volume control
+
 print("Booting...")
 
 # === External Power ON === #
@@ -23,7 +25,7 @@ external_power.value = True
 audio = audiobusio.I2SOut(board.I2S_BIT_CLOCK, board.I2S_WORD_SELECT, board.I2S_DATA)
 
 mixer = audiomixer.Mixer(
-    voice_count=4,  # 1 hum + 3 event voices!
+    voice_count=5,  # 0: hum, 1: swingh, 2: swingl, 3-4: events
     sample_rate=22050,
     channel_count=1,
     bits_per_sample=16,
@@ -41,8 +43,8 @@ num_pixels = 100
 blade = neopixel.NeoPixel(board.EXTERNAL_NEOPIXELS, num_pixels, auto_write=False)
 blade.brightness = 0.8
 
-# Blade color list
-blade_colors = [(0, 125, 255), (0, 255, 0), (255, 0, 0), (255, 255, 0)]  # Cyan, Green, Red, Yellow
+# Blade colors
+blade_colors = [(0, 125, 255), (0, 255, 0), (255, 0, 0), (255, 255, 0)]
 current_color_index = 0
 blade_color = blade_colors[current_color_index]
 
@@ -71,9 +73,7 @@ hum = audiocore.WaveFile(hum_wave)
 # === Parameters === #
 SWING_THRESHOLD = 15
 CLASH_THRESHOLD = 20
-
 DISABLE_CLASH = False
-
 power_on = False
 
 # Button press timing
@@ -93,10 +93,10 @@ def start_power_on():
     wave_file = open("/sounds/poweron.wav", "rb")
     poweron = audiocore.WaveFile(wave_file)
     mixer.voice[1].play(poweron, loop=False)
-    mixer.voice[1].level = 1.0
+    mixer.voice[1].level = MAX_VOLUME * 1.0
     blade_on_animation()
     mixer.voice[0].play(hum, loop=True)
-    mixer.voice[0].level = 0.9
+    mixer.voice[0].level = MAX_VOLUME * 0.9
     power_on = True
 
 def start_power_off():
@@ -110,7 +110,7 @@ def start_power_off():
     wave_file = open("/sounds/poweroff.wav", "rb")
     poweroff = audiocore.WaveFile(wave_file)
     mixer.voice[1].play(poweroff, loop=False)
-    mixer.voice[1].level = 1.0
+    mixer.voice[1].level = MAX_VOLUME * 1.0
 
     # Blocking fade animation
     for step in range(num_pixels - 1, -1, -1):
@@ -125,9 +125,8 @@ def start_power_off():
     blade.fill((0, 0, 0))
     blade.show()
 
-# === NEW: Play on available voice (voices 1-3 for events) === #
 def play_event(sound_file):
-    for i in range(1, 4):  # Voices 1-3 for events
+    for i in range(3, 5):
         if not mixer.voice[i].playing:
             wave_file = open(sound_file, "rb")
             event = audiocore.WaveFile(wave_file)
@@ -135,7 +134,6 @@ def play_event(sound_file):
             mixer.voice[i].level = 1.0
             print(f"Playing {sound_file} on voice {i}")
             return
-    # All voices busy
     print("All event voices busy! Dropping sound.")
 
 def trigger_swing():
@@ -147,7 +145,6 @@ def trigger_clash():
     if power_on and not DISABLE_CLASH:
         sound_file = random.choice(clash_sounds)
         play_event(sound_file)
-        # Flash white
         blade.fill((255, 255, 255))
         blade.show()
         time.sleep(0.3)
